@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Emergency access — WhatsApp Web Time Guard</title>
+  <link rel="stylesheet" href="quiz.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="bar-inner">
+    <span class="tag" id="bankTag">Emergency access</span>
+    <div class="meter"><span id="meterFill"></span></div>
+    <span class="clock" id="clock">0:00.0</span>
+    <span class="counts"><b id="qNow">1</b> / <span id="qTotal">8</span> &nbsp;·&nbsp; <b id="score">0</b> correct</span>
+  </div>
+</header>
+
+<section class="records">
+  <div class="records-inner">
+    <div class="rec">
+      <span class="rec-lbl">Best at best accuracy</span>
+      <span class="rec-val" id="recBestAtBest">—</span>
+    </div>
+    <div class="rec">
+      <span class="rec-lbl">Best time overall</span>
+      <span class="rec-val" id="recBest">—</span>
+    </div>
+    <div class="rec">
+      <span class="rec-lbl">Most recent</span>
+      <span class="rec-val" id="recLast">—</span>
+    </div>
+    <div class="rec">
+      <span class="rec-lbl">Most recent at best accuracy</span>
+      <span class="rec-val" id="recLastAtBest">—</span>
+    </div>
+  </div>
+</section>
+
+<main id="stage">
+  <section id="question">
+    <div class="figure" id="figure" hidden><img id="qImage" alt="Question"></div>
+    <p class="text" id="qText"></p>
+    <div class="choices" id="choices"></div>
+    <form class="entry" id="entry" hidden>
+      <label for="answerBox">Answer</label>
+      <input type="text" id="answerBox" inputmode="numeric" autocomplete="off"
+             maxlength="3" placeholder="00–99">
+      <button type="submit" class="btn solid" id="submitAnswer">Submit</button>
+    </form>
+    <p class="meta"><span id="qSrc"></span><span class="hint" id="hint">Press A–H or click</span></p>
+  </section>
+
+  <section id="verdict" hidden>
+    <h1 id="verdictTitle"></h1>
+    <p id="verdictBody"></p>
+    <p class="files" id="files"></p>
+    <div class="actions">
+      <button id="again" class="btn ghost" hidden>New set of questions</button>
+      <button id="csv" class="btn ghost">Download the log</button>
+      <button id="done" class="btn solid">Close this tab</button>
+    </div>
+  </section>
+
+  <section id="failure" hidden>
+    <h1>Questions unavailable</h1>
+    <p id="failureBody"></p>
+  </section>
+</main>
+
+<script src="vendor/jspdf.umd.min.js"></script>
+<script src="quiz.js"></script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app">
+
+    <header class="bar">
+      <span class="dot" id="dot"></span>
+      <div class="bar-text">
+        <h1>Time Guard</h1>
+        <p id="status">Loading</p>
+      </div>
+      <button class="theme" id="theme" title="Switch between dark and light">☾</button>
+    </header>
+
+    <main id="main">
+      <section class="timers">
+        <div class="timer" id="t8">
+          <span class="lbl">Usage</span>
+          <span class="val" id="v8">8:00</span>
+          <span class="sub">8 min allowance</span>
+        </div>
+        <div class="timer" id="t42">
+          <span class="lbl">Blackout</span>
+          <span class="val" id="v42">42:00</span>
+          <span class="sub">42 min lockout</span>
+        </div>
+      </section>
+
+      <section class="settings">
+        <button class="toggle" id="settingsToggle" aria-expanded="false">
+          Blackout screen
+          <span class="chev" id="chev">▾</span>
+        </button>
+
+        <div class="panel" id="settingsPanel" hidden>
+
+          <div class="field">
+            <span>Preset</span>
+            <div class="dropdown" id="dropdown">
+              <button class="dd-button" id="ddButton" aria-haspopup="listbox" aria-expanded="false">
+                <span class="dd-current" id="ddCurrent"></span>
+                <span class="chev">▾</span>
+              </button>
+              <div class="dd-list" id="ddList" role="listbox" hidden></div>
+            </div>
+          </div>
+
+          <div class="tri" id="tri">
+            <label class="tri-node tri-bg">
+              <input type="color" id="bg" value="#000000">
+              <span>Background</span>
+            </label>
+
+            <button class="tri-swap tri-swap-left" id="swapUpper"
+                    title="Swap background and upper text">⇌</button>
+            <button class="tri-swap tri-swap-right" id="swapLower"
+                    title="Swap background and lower text">⇌</button>
+            <button class="tri-swap tri-swap-base" id="swapText"
+                    title="Swap upper and lower text">⇌</button>
+
+            <div class="tri-mid">
+              <button class="mini" id="presetAdd" title="Add a preset">+</button>
+              <button class="tri-swap tri-swap-mid" id="swapAll"
+                      title="Both texts become the background; the background becomes the average of the two text colours">⇌</button>
+              <button class="mini danger" id="presetDelete" title="Delete this preset">×</button>
+            </div>
+
+            <label class="tri-node tri-upper">
+              <input type="color" id="fgUpper" value="#ffffff">
+              <span>Upper</span>
+            </label>
+            <label class="tri-node tri-lower">
+              <input type="color" id="fgLower" value="#ffffff">
+              <span>Lower</span>
+            </label>
+          </div>
+
+          <div class="preset-tools">
+            <input type="text" id="presetName" placeholder="Preset name" maxlength="28">
+          </div>
+
+          <label class="field">
+            <span>Upper text</span>
+            <textarea id="message" rows="2" placeholder="Empty = rotate through the 8,000 quotes"></textarea>
+          </label>
+          <label class="field">
+            <span>Upper font</span>
+            <select id="quoteFont">
+              <option value="sans">Sans — Arial</option>
+              <option value="serif">Serif — Georgia</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Lower text</span>
+            <textarea id="lowerMessage" rows="2" placeholder="Empty = Go do &lt;minutas&gt; pushups."></textarea>
+          </label>
+          <label class="field">
+            <span>Lower font</span>
+            <select id="pushupFont">
+              <option value="sans">Sans — Arial</option>
+              <option value="serif">Serif — Georgia</option>
+            </select>
+          </label>
+          <p class="note"><code>&lt;minutas&gt;</code> is the minutes left, and it works inside a
+          sum: <code>do (&lt;minutas&gt;/2) pushups</code>.</p>
+
+          <div class="preview" id="preview">
+            <p class="preview-quote" id="previewQuote">Your quote appears here.</p>
+            <p class="preview-push" id="previewPush">Go do 42 pushups.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings">
+        <button class="toggle" id="repliesToggle" aria-expanded="false">
+          Quick replies
+          <span class="chev" id="repliesChev">▾</span>
+        </button>
+
+        <div class="panel" id="repliesPanel" hidden>
+          <p class="note">Offered on the blackout screen for the first 4 minutes, when a chat was
+          open as the allowance ran out. One message, then Escape fires.</p>
+          <div id="replyList"></div>
+          <button class="add-row" id="replyAdd">+ Add a reply</button>
+        </div>
+      </section>
+
+      <div class="emergency-row" id="emergencyRow">
+        <button class="emergency" id="emergencyEsat">EMERGENCY<small>ESAT</small></button>
+        <button class="emergency" id="emergencyIoqm">EMERGENCY<small>IOQM</small></button>
+      </div>
+      <button class="emergency enable" id="enableGuard" hidden>ENABLE GUARD</button>
+      <p class="hint" id="hint">8 questions. Get 6 right to switch the guard off.</p>
+    </main>
+
+    <footer>
+      <a href="#" id="dontreadme">DONTREADME</a>
+    </footer>
+
+  </div>
+  <script src="template.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

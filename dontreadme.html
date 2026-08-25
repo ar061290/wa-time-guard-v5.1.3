@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DONTREADME — WhatsApp Web Time Guard 5.1.3</title>
+  <link rel="stylesheet" href="dontreadme.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="mark">8</span>
+    <div>
+      <h1>WhatsApp Web Time Guard</h1>
+      <p>Version 5.1.3 — the document you were told not to read</p>
+    </div>
+    <button class="labelled" id="compress" title="Condensed version">&#8801;&nbsp; Condensed version</button>
+    <button class="labelled" id="theme" title="Switch between dark and light"><span id="themeLabel">Dark mode</span></button>
+  </div>
+</header>
+
+<div class="shell">
+  <nav id="nav">
+    <a href="#contact">Contact &amp; suggestions</a>
+    <a href="#what">What it does</a>
+    <a href="#prd">Product requirements</a>
+    <a href="#ux">UI / UX guide</a>
+    <a href="#code">How the code works</a>
+    <a href="#files">File map</a>
+    <a href="#settings">Settings reference</a>
+    <a href="#tuning">Tuning &amp; troubleshooting</a>
+    <a href="#quotes">All 8,000 quotes</a>
+    <a href="#mcq">MCQ bank &amp; answers</a>
+  </nav>
+
+  <main>
+
+    <section id="contact">
+      <h2>Contact me / suggest features (with credit)</h2>
+      <p>Built by Aadi Ramnani. Feature ideas, bug reports and complaints about the question bank
+      are all welcome &mdash; anything that ships because you suggested it gets your name against
+      it.</p>
+      <ul class="contact">
+        <li><a href="mailto:aadi.ramnani@gmail.com">aadi.ramnani@gmail.com</a></li>
+        <li><a href="https://www.linkedin.com/in/aadi-r-493485202/" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="https://github.com/ar061290" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </section>
+
+    <section id="what">
+      <h2>What it does</h2>
+      <p>Time Guard gives you eight minutes on WhatsApp Web, then takes the screen away for
+      forty-two. It is not a blocker. It is a metronome: use it, get pulled out of it, go do
+      the thing you were avoiding, come back later.</p>
+
+      <div class="flow">
+        <span class="step">Tab in view <em>and</em> chat open</span>
+        <span class="arrow">→</span>
+        <span class="step green">8:00 usage</span>
+        <span class="arrow">→</span>
+        <span class="step">Esc ×3</span>
+        <span class="arrow">→</span>
+        <span class="step dark">42:00 blackout + quote</span>
+        <span class="arrow">→</span>
+        <span class="step">Idle, waiting again</span>
+      </div>
+
+      <h3>The rules, exactly</h3>
+      <ul>
+        <li>The eight minutes start only when the WhatsApp tab is in view <strong>and</strong> a chat
+        is open, at the same moment. Either one alone does nothing.</li>
+        <li>Once started, those conditions stop mattering. Closing the chat, switching tabs or
+        switching windows changes nothing. They are start conditions, not run conditions.</li>
+        <li>At 8:00 the blackout is painted. No reload.</li>
+        <li>If a chat was open at that moment, the blackout opens with a compose box for the first
+        4 minutes: one message, sent into that chat, with three editable presets a click away.
+        Escape is held back until the message is sent or the 4 minutes lapse. With no chat open,
+        Escape fires three times first, exactly as before, so WhatsApp is back on the chat list.</li>
+        <li>The blackout runs 42:00 and then clears itself. The eight minutes do not restart — the
+        start conditions must be met again.</li>
+        <li>The 8 minute allowance accumulates only while at least one
+        <code>web.whatsapp.com</code> tab exists; close the last one and it freezes exactly where
+        it was. The 42 minute blackout runs on the wall clock and never pauses, so closing the tab
+        cannot bank lockout time.</li>
+        <li>EMERGENCY: eight multiple-choice questions, six correct, and the whole thing switches
+        off for two hours or until you turn it back on. The two hours are never displayed.</li>
+      </ul>
+    </section>
+
+    <section id="prd">
+      <h2>Product requirements</h2>
+
+      <h3>Problem</h3>
+      <p>Messaging does not fail loudly. It fails as a slow leak: eight minutes at a time, six times
+      an evening, and the essay never gets opened. Blockers that simply deny access get uninstalled
+      within a week, because at some point you genuinely do need to reply to someone.</p>
+
+      <h3>Approach</h3>
+      <p>Ration rather than deny. A short, generous window, followed by a long, non-negotiable gap,
+      with an escape hatch that costs enough attention to be worth using only when it matters.</p>
+
+      <h3>Requirements</h3>
+      <table>
+        <thead><tr><th>#</th><th>Requirement</th><th>Where it lives</th></tr></thead>
+        <tbody>
+          <tr><td>R1</td><td>8 minute usage timer, started by view + open chat together</td><td><code>background.js</code> → <code>considerStart</code></td></tr>
+          <tr><td>R2</td><td>Timer indifferent to chat/tab/window changes after starting</td><td><code>background.js</code> → <code>evaluate</code></td></tr>
+          <tr><td>R3</td><td>Escape dispatched three times, deferred while the compose window is open</td><td><code>content.js</code> → <code>pressEscapeThrice</code>, <code>closeCompose</code></td></tr>
+          <tr><td>R3b</td><td>One message into the open chat during the first 4 minutes of blackout</td><td><code>content.js</code> → <code>sendToChat</code>, <code>renderComposer</code></td></tr>
+          <tr><td>R4</td><td>42 minute full-screen blackout, no page reload</td><td><code>content.js</code> → <code>showOverlay</code></td></tr>
+          <tr><td>R5</td><td>The allowance pauses when every WhatsApp tab is closed; the blackout does not</td><td><code>background.js</code> → <code>waTabs</code>, <code>evaluate</code></td></tr>
+          <tr><td>R6</td><td>No auto-restart after the blackout</td><td><code>background.js</code> → <code>evaluate</code></td></tr>
+          <tr><td>R7</td><td>8,000 offline quotes, one per blackout, index advancing</td><td><code>data/quotes.json</code>, <code>bumpQuote</code></td></tr>
+          <tr><td>R8</td><td>Pushups line tracking minutes remaining</td><td><code>content.js</code> → <code>pushupsText</code></td></tr>
+          <tr><td>R9</td><td>Extension icon <em>is</em> the minute count, coloured by phase</td><td><code>background.js</code> → <code>drawIcon</code></td></tr>
+          <tr><td>R10</td><td>Tab favicon mirrors the extension icon</td><td><code>content.js</code> → <code>applyFavicon</code></td></tr>
+          <tr><td>R11</td><td>Tab title gains a seconds suffix without breaking WhatsApp's unread count</td><td><code>content.js</code> → <code>applyTitle</code></td></tr>
+          <tr><td>R12</td><td>EMERGENCY quiz in its own tab, 6 of 8 to pass, 2 hour bypass, hidden countdown</td><td><code>quiz.js</code>, <code>GRANT_BYPASS</code></td></tr>
+          <tr><td>R14</td><td>Stopwatch, four personal records, CSV log, PDF review sheet</td><td><code>quiz.js</code> → <code>records</code>, <code>toCsv</code>, <code>exportPdf</code></td></tr>
+          <tr><td>R16</td><td>Two question banks — ESAT multiple choice and IOQM typed integers — with separate records, logs and downloads</td><td><code>quiz.js</code> → <code>BANKS</code></td></tr>
+          <tr><td>R15</td><td>Re-enabling after a quiz pass resumes the blackout, not the allowance</td><td><code>background.js</code> → <code>bypassFromQuiz</code></td></tr>
+          <tr><td>R13</td><td>8 editable colour presets plus custom, custom text, two font choices</td><td><code>popup.js</code>, <code>DEFAULT_PRESETS</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Explicitly out of scope</h3>
+      <p>Tamper resistance. Anyone with access to <code>chrome://extensions</code> can switch this
+      off in four seconds. It is a speed bump for a person who wants the speed bump, not a lock for
+      a person who doesn't.</p>
+    </section>
+
+    <section id="ux">
+      <h2>UI / UX guide</h2>
+
+      <h3>Palette</h3>
+      <p>Borrowed wholesale from WhatsApp's own dark theme so the popup reads as part of the app
+      rather than a bolt-on.</p>
+      <div class="swatches">
+        <div class="sw" style="background:#111b21"><span>#111B21</span>base</div>
+        <div class="sw" style="background:#202c33"><span>#202C33</span>panel</div>
+        <div class="sw" style="background:#2a3942"><span>#2A3942</span>raised</div>
+        <div class="sw" style="background:#25d366;color:#0b141a"><span>#25D366</span>accent</div>
+        <div class="sw" style="background:#005c4b"><span>#005C4B</span>sent</div>
+        <div class="sw" style="background:#8696a0;color:#0b141a"><span>#8696A0</span>muted</div>
+        <div class="sw" style="background:#e9edef;color:#0b141a"><span>#E9EDEF</span>text</div>
+        <div class="sw" style="background:#f15c6d;color:#0b141a"><span>#F15C6D</span>alert</div>
+      </div>
+
+      <h3>Rules the interface follows</h3>
+      <ul>
+        <li><strong>No card inside a card.</strong> Every surface sits directly on the base
+        background. Sections are separated by a single hairline, never by a nested container.</li>
+        <li><strong>Two rectangles, fixed positions.</strong> Usage is always on the left, blackout
+        always on the right. Neither ever disappears. A timer that is not running simply shows its
+        full value, dimmed; the live one gets a coloured border.</li>
+        <li><strong>Numbers are the loudest thing on screen.</strong> Tabular figures at 28px so the
+        seconds do not wobble as they count.</li>
+        <li><strong>One destructive-looking control.</strong> EMERGENCY is the only element in alert
+        red, and it turns green when it becomes ENABLE GUARD.</li>
+        <li><strong>The quiz gets its own tab.</strong> Answering is a full-attention task, the
+        question crops are pages from the original papers and need the width, and a separate tab
+        means nothing else on screen is competing for the decision.</li>
+      </ul>
+
+      <h3>The blackout screen</h3>
+      <p>Two lines, vertically centred, nothing else. The quote sits in the larger sans face, the
+      pushups line beneath it in italic serif at roughly 60% of the size — different enough to read
+      as a separate voice, close enough to belong to the same screen. Both use the chosen text
+      colour. The count updates on the minute, so it reads as a slow burn rather than a stopwatch.</p>
+
+      <h3>Copy</h3>
+      <p>Failure states never say "denied". A short quiz score is a fact, not a judgement: <em>Too
+      few correct: 4 of 8.</em> The status line is written from the user's side of the screen —
+      "Waiting — open WhatsApp and a chat", not "State: IDLE".</p>
+    </section>
+
+    <section id="code">
+      <h2>How the code works</h2>
+
+      <h3>The state machine</h3>
+      <p>The service worker owns everything. The page and the popup only report and render.</p>
+      <pre><code>IDLE ──(tab in view AND chat open)──▶ ACTIVE ──(8:00 elapsed)──▶ ESCAPING
+                                                                      │ Esc ×3
+                                                                      ▼
+IDLE ◀──────────────(42:00 elapsed, quote index + 1)────────────── BLOCKED</code></pre>
+
+      <h3>Why timestamps instead of counting</h3>
+      <p>Chrome suspends MV3 service workers aggressively, and background tabs throttle
+      <code>setInterval</code>. Nothing counts ticks. State is stored as:</p>
+      <pre><code>{ phase, accumulatedMs, runningSince, quoteIndex, bypassUntil }
+
+elapsed = accumulatedMs + (runningSince ? now - runningSince : 0)</code></pre>
+      <p>Pausing writes <code>accumulatedMs = elapsed</code> and clears <code>runningSince</code>.
+      Resuming sets <code>runningSince = now</code>. The worker can die at any moment and wake up
+      with the arithmetic still correct.</p>
+
+      <h3>Pause on close, not on switch &mdash; and only the allowance</h3>
+      <p><code>chrome.tabs.query({url: 'https://web.whatsapp.com/*'})</code> answers one question:
+      does a WhatsApp tab exist? That is the entire pause condition, and it applies to the
+      <code>ACTIVE</code> phase alone. Visibility and focus are only consulted for the start
+      conditions, in <code>considerStart</code>.</p>
+      <p><code>BLOCKED</code> deliberately ignores it. A lockout you can pause by closing the tab is
+      not a lockout &mdash; you would close WhatsApp, do something else for forty minutes, come
+      back and still owe the full forty-two. So the blackout keeps its <code>runningSince</code>
+      set no matter what, and <code>evaluate</code> restores it if it ever finds it cleared.</p>
+
+      <h3>Firing on time</h3>
+      <p>Three independent triggers, because any one of them can be delayed:</p>
+      <ol>
+        <li>A <code>chrome.alarms</code> entry at the exact deadline.</li>
+        <li>A <code>setTimeout</code> in the page, scheduled from the absolute deadline.</li>
+        <li>A one-second poll in the page that compares <code>Date.now()</code> to the deadline.</li>
+      </ol>
+      <p>Whichever fires first sends <code>DEADLINE</code>; the worker recomputes and ignores it if
+      it was early. A one-minute reconcile alarm sweeps up anything else.</p>
+
+      <h3>The one message</h3>
+      <p>Cutting someone off mid-sentence for forty-two minutes is rude, and rudeness is what makes
+      people uninstall a tool like this. So the blackout opens with a compose box whenever a chat
+      was open at the moment the allowance expired. The window is bounded three ways: four minutes,
+      one message, and the Escapes fire the instant either limit is reached. Because the crop of
+      the conversation is already hidden behind the overlay, the box is the only thing you can act
+      on &mdash; you can excuse yourself, but you cannot keep talking.</p>
+      <p>The text is inserted into WhatsApp's editor with <code>execCommand('insertText')</code>,
+      which raises the same input events the editor listens for, and sent by clicking its own send
+      control rather than faking a keystroke.</p>
+
+      <h3>Escape, honestly</h3>
+      <p>Extensions cannot generate trusted keystrokes without the debugger API. The content script
+      dispatches full <code>keydown</code> / <code>keypress</code> / <code>keyup</code> Escape events
+      at the focused element, <code>document</code> and <code>window</code>, with
+      <code>keyCode</code> and <code>which</code> patched onto the event object because they are not
+      settable through the constructor. If a future WhatsApp build ignores synthetic keys,
+      <code>fallbackCloseChat()</code> clicks the back control instead.</p>
+
+      <h3>The icon is a canvas</h3>
+      <p>The worker draws the number into an <code>OffscreenCanvas</code> at 16, 32, 48 and 128 px
+      and hands the <code>ImageData</code> to <code>chrome.action.setIcon</code>. Green with white
+      digits during usage; the blackout's own colours during the blackout; grey while a bypass is
+      active. The page draws the same thing into a 64px canvas and pushes it into a
+      <code>&lt;link rel="icon"&gt;</code>.</p>
+
+      <h3>The title, without stepping on WhatsApp</h3>
+      <p>WhatsApp rewrites <code>document.title</code> whenever the unread count changes. A
+      <code>MutationObserver</code> on the <code>&lt;title&gt;</code> element records every value the
+      extension did not write itself as the new base, strips any existing suffix, and re-appends the
+      current seconds. The unread prefix survives untouched:
+      <code>(3) WhatsApp Web (47)</code>.</p>
+
+      <h3>Quotes</h3>
+      <p>8,000 lines ship as JSON and are read by the worker only, so the page never carries the
+      payload. The index advances when WhatsApp is closed entirely and when a blackout completes, so
+      you rarely see the same line twice in a week.</p>
+    </section>
+
+    <section id="files">
+      <h2>File map</h2>
+      <table>
+        <thead><tr><th>File</th><th>Role</th></tr></thead>
+        <tbody>
+          <tr><td><code>manifest.json</code></td><td>MV3 manifest. Permissions: storage, alarms, scripting, plus host access to web.whatsapp.com.</td></tr>
+          <tr><td><code>background.js</code></td><td>Service worker: state machine, pause/resume, quote index, bypass, icon painting.</td></tr>
+          <tr><td><code>content.js</code></td><td>Page agent: chat detection, Escape, overlay, favicon, title.</td></tr>
+          <tr><td><code>popup.html/.css/.js</code></td><td>Popup: two timers, appearance settings, EMERGENCY.</td></tr>
+          <tr><td><code>quiz.html/.css/.js</code></td><td>The emergency quiz as a full tab, with keyboard answering.</td></tr>
+          <tr><td><code>data/quotes.json</code></td><td>8,000 offline quotes.</td></tr>
+          <tr><td><code>data/questions.json</code></td><td>MCQ bank: <code>{ q, options[], answer }</code>.</td></tr>
+          <tr><td><code>dontreadme.html/.css/.js</code></td><td>This page.</td></tr>
+          <tr><td><code>template.js</code></td><td>The <code>&lt;minutas&gt;</code> evaluator, shared by the overlay and the popup preview.</td></tr>
+          <tr><td><code>calculator.html</code></td><td>The graphing calculator, byte-for-byte as supplied. Runs as a sandboxed page so its inline script is allowed.</td></tr>
+          <tr><td><code>vendor/jspdf.umd.min.js</code></td><td>PDF writer for the quiz review sheet, bundled so nothing is fetched at runtime.</td></tr>
+          <tr><td><code>icons/</code></td><td>Fallback icons for the moment before the worker paints a real one.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="settings">
+      <h2>Settings reference</h2>
+      <table>
+        <thead><tr><th>Setting</th><th>Values</th><th>Effect</th></tr></thead>
+        <tbody>
+          <tr><td>Preset</td><td>Up to 8 presets, plus Custom</td><td>Rename, add and delete them freely; Custom is permanent and cannot be renamed. Editing a colour while a preset is selected rewrites that preset.</td></tr>
+          <tr><td>&#8652;</td><td>One on each side of the colour triangle</td><td>Background sits at the apex, upper text bottom-left, lower text bottom-right. Each side button exchanges the two corners it joins, for the selected entry only.</td></tr>
+          <tr><td>&#8652; (vertical, centre)</td><td>Between add and delete</td><td>Both text colours become the background colour; the background becomes the channel-wise mean of the two text colours it replaced &mdash; <code>bg = ((Ru+Rl)/2, (Gu+Gl)/2, (Bu+Bl)/2)</code>.</td></tr>
+          <tr><td>Background / Upper / Lower</td><td>Three colours per preset</td><td>The shipped presets start with upper and lower identical, but nothing enforces it &mdash; change one and they part ways.</td></tr>
+          <tr><td>Presets</td><td>Unlimited</td><td>Both the colour presets and the quick replies can be added to without limit.</td></tr>
+          <tr><td>Background</td><td>Any colour</td><td>Blackout background, and the extension/tab icon fill during the blackout.</td></tr>
+          <tr><td>Text</td><td>Any colour</td><td>Both lines on the blackout, and the digits on the icon during the blackout.</td></tr>
+          <tr><td>Upper text</td><td>Free text, or empty</td><td>Empty rotates through the quote file. Anything else pins that message permanently.</td></tr>
+          <tr><td>Lower text</td><td>Free text, or empty</td><td>Empty gives <code>Go do &lt;minutas&gt; pushups.</code></td></tr>
+          <tr><td><code>&lt;minutas&gt;</code></td><td>In either line</td><td>The minutes left, updated live. It can sit inside a bracketed sum, so <code>do (&lt;minutas&gt;/2) pushups</code> counts down at half speed. Parsed by a small shunting-yard evaluator, not <code>eval</code>.</td></tr>
+          <tr><td>Upper font</td><td>Sans / Serif</td><td>Arial stack or Georgia stack for the top line.</td></tr>
+          <tr><td>Lower font</td><td>Sans / Serif</td><td>Same choice for the bottom line. Defaults to serif so the two lines read differently.</td></tr>
+          <tr><td>Theme</td><td>Dark / Light</td><td>The moon and sun button in the top corner. Applies to the popup and this page; the blackout screen has its own colours.</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Claude's own serif is not redistributable, so the serif option resolves to
+      Georgia, then Iowan Old Style, then Times New Roman. Swap the <code>SERIF</code> constant in
+      <code>content.js</code> if you have a licensed face installed locally.</p>
+    </section>
+
+    <section id="tuning">
+      <h2>Tuning &amp; troubleshooting</h2>
+      <table>
+        <thead><tr><th>Want to change</th><th>Do this</th></tr></thead>
+        <tbody>
+          <tr><td>Timer lengths</td><td><code>ACTIVE_MS</code> / <code>BLOCKED_MS</code> at the top of <code>background.js</code>. Use 20s / 30s to test.</td></tr>
+          <tr><td>Bypass length or pass mark</td><td><code>BYPASS_MS</code> in <code>background.js</code>; <code>PASS_MARK</code> and <code>QUIZ_LENGTH</code> in <code>popup.js</code>.</td></tr>
+          <tr><td>Your own questions</td><td>Replace <code>data/questions.json</code>, keeping the shape <code>{ "q", "options": [], "answer": index }</code>.</td></tr>
+          <tr><td>Your own quotes</td><td>Replace <code>data/quotes.json</code> with any JSON array of strings. Length is read at runtime.</td></tr>
+          <tr><td>Window focus is too strict</td><td>Set <code>REQUIRE_WINDOW_FOCUS = false</code> in <code>content.js</code> to require only the active tab.</td></tr>
+          <tr><td>Keep WhatsApp's favicon when idle</td><td>Set <code>FAVICON_ALWAYS = false</code> in <code>content.js</code>.</td></tr>
+          <tr><td>Chat is not detected</td><td>WhatsApp changed its DOM. Update <code>CHAT_SELECTORS</code> in <code>content.js</code> — <code>#main</code> is the primary signal.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="quotes">
+      <h2>All 8,000 quotes</h2>
+      <p>Every line is original to this extension and shipped offline. The blackout shows the one at
+      the stored index; the index advances when WhatsApp is closed and when a blackout ends.</p>
+      <div class="tools">
+        <input type="search" id="quoteSearch" placeholder="Search quotes…">
+        <span id="quoteCount" class="count"></span>
+      </div>
+      <ol id="quoteList"></ol>
+      <button id="moreQuotes" class="more">Load more</button>
+    </section>
+
+    <section id="mcq">
+      <h2>MCQ bank &amp; answers</h2>
+      <p><b>Two banks.</b> EMERGENCY splits into ESAT and IOQM. The ESAT bank is multiple choice;
+      the IOQM bank is 211 questions from IOQM and PRMO papers whose answers are integers 00&ndash;99,
+      so those are typed rather than picked. Each bank keeps its own attempt log, its own four
+      records and its own CSV and PDF downloads, so the timings never mix. The condensed-version
+      gate on this page always draws from the ESAT bank.</p>
+
+      <p>515 maths and physics questions from the ENGAA and NSAA Section 1 past papers
+      (2016&ndash;2023 plus specimens). Chemistry and biology were dropped; everything else was
+      kept, <strong>including diagram questions</strong>. Each one is a crop of the original
+      page &mdash; stem, figure, table and options exactly as printed &mdash; so surds, fractions,
+      graphs and circuits all survive. The answer buttons are the option letters.</p>
+      <p>237 questions appear in more than one paper; the repeats were removed, and the fact that
+      every duplicate pair agreed on its answer letter is the check that the keys are aligned. The
+      one paper whose key disagreed with its twin (the 2020-format NSAA specimen) was dropped
+      entirely.</p>
+      <p>Eight are drawn at random each time EMERGENCY is used, with the options shuffled. Correct
+      answers are marked.</p>
+      <div class="tools"><span id="mcqCount" class="count"></span></div>
+      <div id="mcqList"></div>
+      <button id="moreMcq" class="more">Load more</button>
+    </section>
+
+  </main>
+</div>
+
+<footer class="foot">
+  <p>WhatsApp Web Time Guard 5.1.3 — unaffiliated with WhatsApp or Meta. Built for one person's
+  attention span.</p>
+</footer>
+
+
+<!-- ---------- gate: answer one question to unlock the compressed version ---------- -->
+<div class="gate" id="gate" hidden>
+  <div class="gate-box">
+    <div class="gate-head">
+      <div>
+        <h2 id="gateTitle">Solve this question first</h2>
+        <p id="gateSub">One correct answer from the ESAT bank unlocks the condensed version.
+        Unlimited tries, and the calculator on the right is yours.</p>
+      </div>
+      <button class="gate-x" id="gateClose" title="Back to the full version">&times;</button>
+    </div>
+
+    <div class="gate-body-wrap">
+      <div class="gate-wrong" id="gateWrong" hidden>
+        <div class="gate-wrong-box">
+          <h3>Not that one</h3>
+          <p>You chose <b id="gateChose"></b>. The correct answer was <b id="gateRight"></b>.</p>
+          <button class="btn solid" id="gateRetry">Try another question</button>
+        </div>
+      </div>
+    <div class="gate-body">
+      <div class="gate-q">
+        <div class="figure" id="gateFigure" hidden><img id="gateImage" alt="Question"></div>
+        <p class="gate-text" id="gateText"></p>
+        <div class="gate-choices" id="gateChoices"></div>
+      </div>
+      <div class="gate-calc" id="calcBox">
+        <iframe id="calc" src="calculator.html" title="Graphing calculator" scrolling="no"></iframe>
+        <button class="calc-fallback" id="calcTab" title="Open the calculator in its own tab">Open in a tab ↗</button>
+      </div>
+    </div>
+    </div>
+  </div>
+</div>
+
+<div class="party" id="party" hidden>
+  <canvas id="confetti"></canvas>
+  <div class="party-text">
+    <h1>CONGRATULATIONS</h1>
+    <p id="partyLine"></p>
+  </div>
+</div>
+
+<!-- ---------- compressed version ---------- -->
+<div class="compressed" id="compressed" hidden>
+  <div class="compressed-inner">
+    <div class="compressed-head">
+      <h1>Time Guard &mdash; the short version</h1>
+      <button class="labelled" id="expand" title="Back to the full version">&#8599;&nbsp; Full version</button>
+    </div>
+
+    <h2>Contact</h2>
+    <ul>
+      <li>Built by Aadi Ramnani; feature ideas get credited.</li>
+      <li><a href="mailto:aadi.ramnani@gmail.com">aadi.ramnani@gmail.com</a></li>
+      <li><a href="https://www.linkedin.com/in/aadi-r-493485202/" target="_blank" rel="noopener">LinkedIn</a>
+          &nbsp;·&nbsp; <a href="https://github.com/ar061290" target="_blank" rel="noopener">GitHub</a></li>
+    </ul>
+
+    <h2>What it does</h2>
+    <ul>
+      <li>Tab in view <i>and</i> a chat open starts an 8 minute allowance.</li>
+      <li>After that: Escape &times;3, then a 42 minute blackout carrying a quote.</li>
+      <li>Blackout ends &rarr; idle. The allowance does not restart on its own.</li>
+      <li>Allowance pauses when every WhatsApp tab is shut; the blackout never pauses.</li>
+      <li>Tab and window switching pause nothing. No page reload at any point.</li>
+    </ul>
+
+    <h2>Product requirements</h2>
+    <ul>
+      <li>Ration attention rather than deny it, so the thing survives past week one.</li>
+      <li>Short window, long gap, one escape hatch that costs real effort.</li>
+      <li>Start conditions are initialisation only; they never pause a running timer.</li>
+      <li>One message out is allowed, because vanishing mid-sentence is what gets tools uninstalled.</li>
+      <li>Tamper resistance is explicitly out of scope.</li>
+    </ul>
+
+    <h2>UI / UX</h2>
+    <ul>
+      <li>WhatsApp's own dark palette, with a light mode that inverts surfaces only.</li>
+      <li>No card inside a card; sections divide with hairlines.</li>
+      <li>Usage left, blackout right, fixed positions, neither ever hidden.</li>
+      <li>Tabular figures so the seconds do not wobble.</li>
+      <li>The quiz takes a whole tab; question crops need the width.</li>
+    </ul>
+
+    <h2>How the code works</h2>
+    <ul>
+      <li>The service worker owns everything; page and popup only report and render.</li>
+      <li>State is <code>{phase, accumulatedMs, runningSince, quoteIndex, bypassUntil}</code>.</li>
+      <li>Elapsed time is derived from timestamps, so the worker can be killed at any moment.</li>
+      <li>Three independent triggers fire a transition: an alarm, a page timeout, a 1 s poll.</li>
+      <li>Escape is synthetic (<code>keydown/keypress/keyup</code>, <code>keyCode</code> patched on);
+          a back-button click is the fallback.</li>
+      <li>The icon is drawn per minute into an <code>OffscreenCanvas</code>.</li>
+    </ul>
+
+    <h2>Files</h2>
+    <ul>
+      <li><code>background.js</code> — state machine, pause/resume, quote index, bypass, icon.</li>
+      <li><code>content.js</code> — chat detection, Escape, overlay, composer, favicon, title.</li>
+      <li><code>popup.*</code> — timers, appearance, quick replies, EMERGENCY.</li>
+      <li><code>quiz.*</code> — the quiz tab, stopwatch, CSV log, PDF review sheet.</li>
+      <li><code>template.js</code> — the <code>&lt;minutas&gt;</code> evaluator.</li>
+      <li><code>data/</code> — 8,000 quotes, 515 ESAT questions, 211 IOQM questions.</li>
+    </ul>
+
+    <h2>Settings</h2>
+    <ul>
+      <li>Unlimited colour presets, each with background, upper and lower colours.</li>
+      <li>⇌ on each triangle side swaps that pair, for the selected entry only.</li>
+      <li>Upper text empty rotates the quotes; lower text empty gives the pushups line.</li>
+      <li><code>&lt;minutas&gt;</code> is the minutes left and works in a sum:
+          <code>do (&lt;minutas&gt;/2) pushups</code>.</li>
+      <li>Two fonts per line: Arial stack or Georgia stack.</li>
+      <li>Unlimited quick replies, shown side by side under the compose box.</li>
+    </ul>
+
+    <h2>Tuning</h2>
+    <ul>
+      <li>Durations: <code>ACTIVE_MS</code>, <code>BLOCKED_MS</code>, <code>COMPOSE_MS</code>,
+          <code>BYPASS_MS</code> in <code>background.js</code>.</li>
+      <li>Pass mark and quiz length: <code>PASS_MARK</code>, <code>QUIZ_LENGTH</code> in
+          <code>quiz.js</code>.</li>
+      <li><code>REQUIRE_WINDOW_FOCUS</code> and <code>FAVICON_ALWAYS</code> in
+          <code>content.js</code>.</li>
+      <li>Chat detection lives in <code>CHAT_SELECTORS</code>; <code>#main</code> is the primary
+          signal.</li>
+    </ul>
+
+    <h2>Emergency quiz</h2>
+    <ul>
+      <li>Two banks: ESAT (multiple choice) and IOQM (type the integer).</li>
+      <li>8 questions, 6 correct switches the guard off for 2 hours.</li>
+      <li>Re-enabling by hand resumes the blackout, not a fresh allowance.</li>
+      <li>Every attempt is timed and appended to <code>time-guard/quiz-log.csv</code>.</li>
+      <li>A dated PDF records each question, its options, the right answer and your pick.</li>
+      <li>Four records shown: best at best accuracy, best overall, latest, latest at best accuracy.</li>
+    </ul>
+
+    <h2>Question bank</h2>
+    <ul>
+      <li>515 maths and physics questions from ENGAA and NSAA Section 1, 2016&ndash;2023.</li>
+      <li>492 are page crops, so diagrams, tables and surds survive intact.</li>
+      <li>Chemistry, biology and the written-answer papers are excluded.</li>
+      <li>237 duplicate pairs all agreed on their answer letter; the one paper that disagreed was
+          dropped.</li>
+    </ul>
+
+    <h2>Quotes</h2>
+    <ul>
+      <li>8,000 original lines, shipped offline in <code>data/quotes.json</code>.</li>
+      <li>The index advances when WhatsApp is closed and when a blackout ends.</li>
+      <li>A pinned upper text replaces them entirely until you clear it.</li>
+    </ul>
+
+    <div class="qsearch">
+      <input type="search" id="cSearch" placeholder="Search the 8,000 quotes…">
+      <p class="qsearch-out" id="cSearchOut">Type to find a quote.</p>
+    </div>
+
+    <p class="compressed-contact"><a href="mailto:aadi.ramnani@gmail.com">aadi.ramnani@gmail.com</a>
+    &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/aadi-r-493485202/" target="_blank" rel="noopener">LinkedIn</a>
+    &nbsp;·&nbsp; <a href="https://github.com/ar061290" target="_blank" rel="noopener">GitHub</a></p>
+  </div>
+</div>
+
+<script src="dontreadme.js"></script>
+</body>
+</html>

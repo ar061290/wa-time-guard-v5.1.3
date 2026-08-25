@@ -1,0 +1,65 @@
+{
+  "manifest_version": 3,
+  "name": "WhatsApp Web Time Guard",
+  "version": "5.1.3",
+  "description": "8 minutes of WhatsApp Web, then a 42 minute blackout with a motivational quote. Timers pause only when every WhatsApp tab is closed.",
+  "permissions": [
+    "storage",
+    "alarms",
+    "scripting",
+    "downloads"
+  ],
+  "host_permissions": [
+    "https://web.whatsapp.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_title": "WhatsApp Web Time Guard",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ],
+      "js": [
+        "template.js",
+        "content.js"
+      ],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "sandbox": {
+    "pages": [
+      "calculator.html"
+    ]
+  },
+  "content_security_policy": {
+    "sandbox": "sandbox allow-scripts allow-forms allow-popups allow-modals allow-downloads; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob:; worker-src 'self' blob:; child-src 'self' blob:;"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "calculator.html"
+      ],
+      "matches": [
+        "https://web.whatsapp.com/*"
+      ]
+    }
+  ]
+}
